@@ -6,6 +6,7 @@ import axios from 'axios';
 import SearchForm from './components/SearchForm';
 import CurrentWeather from './components/CurrentWeather';
 import Forecast from './components/Forecast';
+import WeatherChart from './components/WeatherChart';
 import './App.css';
 
 // The App component is the top-level component that acts as the main container for our application.
@@ -145,6 +146,18 @@ function App() {
               to the `Forecast` component.
             */}
             <Forecast forecastData={weatherData.forecast} />
+             {(() => {
+              // 1. The data processing logic remains the same. We create `chartData`
+              //    from `weatherData.forecast`.
+              const chartData = weatherData.forecast.map(day => ({
+                name: day.day,
+                temperature: Math.round(day.tempHigh),
+              }));
+              
+              // 2. We now render the WeatherChart component and pass the processed
+              //    `chartData` to it via the `data` prop.
+              return <WeatherChart data={chartData} />;
+            })()}
           </>
         )}
       </main>

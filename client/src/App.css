@@ -1,0 +1,26 @@
+/* client/src/App.css */
+
+/* Add these new styles for our chart's container */
+.weather-chart-container {
+  /* Use flexbox to center the title and manage layout */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  /* Spacing and Dimensions */
+  margin-top: 2rem;
+  padding: 1.5rem;
+
+  /* Visual Styling */
+  background-color: #ffffff; /* A clean white background */
+  border-radius: 0.75rem; /* Rounded corners */
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* A subtle shadow */
+  width: 100%; /* Ensure it takes up the full width of its parent in the main layout */
+}
+
+.weather-chart-container h2 {
+  /* Style the chart's title */
+  color: #374151; /* A dark gray for good contrast */
+  font-size: 1.25rem;
+  margin-bottom: 1.5rem; /* Space between the title and the chart */
+}
