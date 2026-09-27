@@ -2,7 +2,9 @@
 
 // 1. Import all the necessary child components and the main CSS file.
 import { useState, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import axios from 'axios';
+import Navbar from './components/Navbar';
 import SearchForm from './components/SearchForm';
 import CurrentWeather from './components/CurrentWeather';
 import Forecast from './components/Forecast';
@@ -88,11 +90,21 @@ function App() {
   };
   return (
     
-    <div className="App">
-      {/*
-        The <header> tag is used for semantic HTML, indicating that this section
-        contains introductory content or navigational links.
-      */}
+    <>
+      {/* 3. The Navbar is placed outside of <Routes>, so it will be visible on all pages. */}
+      <Navbar />
+
+      <div className="App">
+        {/* 4. The <Routes> component acts as a container for all our individual routes.
+            It will only render the component of the first <Route> that matches the current URL. */}
+        <Routes>
+          {/* 5. The Route for the Homepage. */}
+          <Route 
+            path="/" 
+            element={
+              // The `element` prop takes the JSX to be rendered for this path.
+              // We are placing all the original dashboard JSX here.
+              <>
       <header>
         <h1>Weather Dashboard</h1>
         {/*
@@ -112,9 +124,7 @@ function App() {
                 <li 
                   key={city} 
                   className="history-item"
-                  // We add the onClick handler here.
-                  // When this list item is clicked, it will call the fetchWeather
-                  // function with the specific `city` for this item.
+                  
                   onClick={() => fetchWeather(city)}
                 >
                   {city}
@@ -147,22 +157,27 @@ function App() {
             */}
             <Forecast forecastData={weatherData.forecast} />
              {(() => {
-              // 1. The data processing logic remains the same. We create `chartData`
-              //    from `weatherData.forecast`.
+              
               const chartData = weatherData.forecast.map(day => ({
                 name: day.day,
                 temperature: Math.round(day.tempHigh),
               }));
               
-              // 2. We now render the WeatherChart component and pass the processed
-              //    `chartData` to it via the `data` prop.
               return <WeatherChart data={chartData} />;
             })()}
           </>
         )}
       </main>
-      
+      </>
+            }
+          />
+       <Route path="/login" element={<LoginPage />} />
+
+          {/* 7. The Route for the Registration Page. */}
+          <Route path="/register" element={<RegisterPage />} />
+        </Routes>
     </div>
+    </>
   );
 }
 
