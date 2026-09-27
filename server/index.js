@@ -1,16 +1,26 @@
-require('dotenv').config();
-// 1. Import the Express library
-// The 'require' function is the core way Node.js includes modules from other files.
-// Here, we are loading the 'express' package from our node_modules folder.
-// The 'const' keyword ensures that the 'express' variable cannot be reassigned.
-const express = require('express');
-const axios = require('axios');
 
+import dns from 'node:dns';
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+import express from 'express';
+import dotenv from 'dotenv';
+import axios from 'axios';
+import connectDB from './db.js';
+import authRoutes from './routes/auth.js';
+
+// --- ADD THIS LINE ---
+// 2. Load the environment variables from our .env file.
+//    This MUST be called before we try to use any of the variables.
+dotenv.config();
+
+// --- ADD THIS LINE ---
+// 3. Execute the database connection function.
+connectDB();
 // 2. Create an instance of the Express application
 // We execute the express function we just imported to create our application object.
 // By convention, this object is always named 'app'. This 'app' object is the heart
 // of our server; it has methods for handling requests, configuring middleware, and starting the server.
 const app = express();
+app.use(express.json());
 app.get('/api/weather', async (req, res) => {
   try {
     // Extract the city from the query parameters.
@@ -100,23 +110,9 @@ app.get('/api/weather', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch weather data' });
   }
 });
-// 3. Define the port for our server
-// It is a crucial best practice to make the port configurable via environment variables.
-// 'process.env.PORT' is the standard way to access a port number provided by a hosting
-// service (like Render, Vercel, or Heroku) in a production environment.
-// The '|| 5000' provides a default value. If `process.env.PORT` is not set (like when we
-// run it on our local machine), the server will use port 5000.
+app.use('/api/auth', authRoutes);
 const PORT = process.env.PORT || 5000;
 
-// 4. Start the server and listen for incoming requests
-// The app.listen() method binds and listens for connections on the specified port.
-// It's the command that actually starts the server process.
-// The first argument is the port number.
-// The second argument is a callback function that will be executed once the server
-// has successfully started. This is the perfect place to log a confirmation
-// message to the console so we know our server is running.
 app.listen(PORT, () => {
-  // This message will appear in your terminal, providing immediate feedback that
-  // the server is up and running correctly.
-  console.log(`Server is now listening with nodemon on port ${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
