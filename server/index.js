@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import axios from 'axios';
 import connectDB from './db.js';
 import authRoutes from './routes/auth.js';
-
+import favoritesRoutes from './routes/favorites.js';
 // --- ADD THIS LINE ---
 // 2. Load the environment variables from our .env file.
 //    This MUST be called before we try to use any of the variables.
@@ -111,6 +111,7 @@ app.get('/api/weather', async (req, res) => {
   }
 });
 app.use('/api/auth', authRoutes);
+app.use('/api/favorites', favoritesRoutes);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

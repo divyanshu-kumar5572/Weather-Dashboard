@@ -19,6 +19,17 @@ const userSchema = new mongoose.Schema(
       type: String,     // The data type is a string.
       required: true,   // A password is required.
     },
+    favoriteCities: {
+      // 3. The `type` is `[String]`. This special Mongoose syntax declares that
+      //    this field is an array, and each element within the array must be a String.
+      type: [String],
+      // 4. Setting a `default` value is a crucial best practice.
+      //    This ensures that every new user document created will automatically have
+      //    a `favoriteCities` property initialized as an empty array `[]`.
+      //    This prevents potential "undefined" errors later when we try to add a city
+      //    to a new user's list for the first time.
+      default: [],
+    },
   },
   {
     // 3. Schema options object.

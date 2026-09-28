@@ -1,7 +1,7 @@
 // client/src/App.jsx
 
 // 1. Import all the necessary child components and the main CSS file.
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from './components/Navbar';
@@ -9,10 +9,15 @@ import SearchForm from './components/SearchForm';
 import CurrentWeather from './components/CurrentWeather';
 import Forecast from './components/Forecast';
 import WeatherChart from './components/WeatherChart';
+import FavoritesList from './components/FavoritesList';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import { AuthContext } from './context/AuthContext';
 import './App.css';
 
 // The App component is the top-level component that acts as the main container for our application.
 function App() {
+  const { isAuthenticated } = useContext(AuthContext);
   // The 'return' statement defines the layout of our application by assembling our imported components.
   const [weatherData, setWeatherData] = useState(null);
 
@@ -112,6 +117,8 @@ function App() {
           with the entire JSX returned by the SearchForm.js file.
         */}
         <SearchForm onSearch={fetchWeather}/>
+        {isAuthenticated && <FavoritesList />}
+        {isAuthenticated && <FavoritesList onFavoriteClick={fetchWeather} />}
         {searchHistory.length > 0 && (
           <div className="search-history">
             <h3>Recent Searches</h3>
