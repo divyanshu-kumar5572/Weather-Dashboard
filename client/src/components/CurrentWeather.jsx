@@ -6,7 +6,7 @@ import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
 
 // The component receives props `weatherData` and `onSetDefault` as before.
-function CurrentWeather({ weatherData, onSetDefault }) {
+function CurrentWeather({ weatherData, onSetDefault, unit }) {
   // 2. Access the global authentication state using the useContext hook.
   //    We get the `isAuthenticated` flag to control rendering and the `token`
   //    to authorize our API call.
@@ -22,7 +22,7 @@ function CurrentWeather({ weatherData, onSetDefault }) {
 
   const { city, temp, condition, icon } = weatherData;
   const iconUrl = `https://openweathermap.org/img/wn/${icon}@2x.png`;
-
+const unitSymbol = unit === 'metric' ? '°C' : '°F';
   // 4. Create the handler function for the "Add to Favorites" button.
   const handleAddFavorite = async () => {
     // Reset status on a new click
@@ -62,7 +62,7 @@ function CurrentWeather({ weatherData, onSetDefault }) {
       <h2>{city}</h2>
       <div className="weather-details">
         <img src={iconUrl} alt={condition} className="weather-icon" />
-        <p className="temperature">{Math.round(temp)}°C</p>
+        <p className="temperature">{Math.round(temp)}{unitSymbol}</p>
         <p className="condition">{condition}</p>
       </div>
 

@@ -14,10 +14,10 @@ const dummyForecastData = {
 // Our component function accepts a 'dayData' prop.
 // We use destructuring and a default value, just like in the CurrentWeather component.
 // This pattern makes our components predictable and easy to test.
-function ForecastCard({ dayData = dummyForecastData }) {
+function ForecastCard({ dayData, unit }) {
   // Destructure the properties from the dayData object for clean, direct access in the JSX.
   const { day, icon, tempHigh, tempLow } = dayData;
-
+const unitSymbol = unit === 'metric' ? '°C' : '°F';
   // Construct the full URL for the weather icon provided by OpenWeatherMap.
   const iconUrl = `https://openweathermap.org/img/wn/${icon}@2x.png`;
 
@@ -28,8 +28,8 @@ function ForecastCard({ dayData = dummyForecastData }) {
       <h3 className="forecast-day">{day}</h3>
       <img src={iconUrl} alt="Weather icon" className="forecast-icon" />
       <div className="forecast-temps">
-        <span className="temp-high">{Math.round(tempHigh)}°</span>
-        <span className="temp-low">{Math.round(tempLow)}°</span>
+        <span className="temp-high">{Math.round(tempHigh)}{unitSymbol}</span>
+        <span className="temp-low">{Math.round(tempLow)}{unitSymbol}</span>
       </div>
     </div>
   );

@@ -14,45 +14,42 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import { AuthContext } from './context/AuthContext';
 import './App.css';
-
+import ToggleSwitch from './components/ToggleSwitch';
 // The App component is the top-level component that acts as the main container for our application.
 function App() {
   const { isAuthenticated } = useContext(AuthContext);
-  // The 'return' statement defines the layout of our application by assembling our imported components.
   const [weatherData, setWeatherData] = useState(null);
-
-  
   const [loading, setLoading] = useState(false);
-
   const [error, setError] = useState(null);
   const [searchHistory, setSearchHistory] = useState([]);
   useEffect(() => {
-    // This is the existing logic to load the search history.
     const storedHistory = localStorage.getItem('searchHistory');
     if (storedHistory) {
       setSearchHistory(JSON.parse(storedHistory));
     }
-
-    // This is our new logic to check for and load the default city.
     const defaultCity = localStorage.getItem('defaultCity');
-    
-    // We check if a value was actually found for 'defaultCity'.
-    if (defaultCity) {
-      // If it exists, we call our main fetchWeather function to automatically
-      // load the weather for the user's preferred location on startup.
+        if (defaultCity) {
       fetchWeather(defaultCity);
     }
   }, []);
   const handleSetDefault = (city) => {
-    // We use localStorage.setItem() to save the value.
-    // The first argument, 'defaultCity', is the key we will use to retrieve it later.
-    // The second argument, `city`, is the value we are saving.
     localStorage.setItem('defaultCity', city);
-    // It's good practice to give the user immediate feedback that the action was successful.
-    // A simple alert is fine for now.
     alert(`${city} has been set as your default city!`);
   };
+const [unit, setUnit] = useState(() => {
+    return localStorage.getItem('unit') || 'metric';
+  });
 
+  // 2. Use a `useEffect` hook to save the unit to localStorage whenever it changes.
+  useEffect(() => {
+    localStorage.setItem('unit', unit);
+  }, [unit]);
+  
+  // 3. Create the handler function for the toggle switch.
+  const handleUnitToggle = () => {
+    // This function simply toggles the state between 'metric' and 'imperial'.
+    setUnit(prevUnit => (prevUnit === 'metric' ? 'imperial' : 'metric'));
+  };
 
   const fetchWeather = async (city) => {
     setLoading(true);
@@ -61,7 +58,7 @@ function App() {
     
     try {
       
-      const response = await axios.get(`/api/weather?city=${city}`);
+      const response = await axios.get('/api/weather', { params: { city, unit } });
 
       
       setWeatherData(response.data);
@@ -93,6 +90,75 @@ function App() {
       setLoading(false);
     }
   };
+  const [geolocationError, setGeolocationError] = useState('');
+
+  // 2. Define the event handler for our new button.
+  const handleGeolocationClick = () => {
+    // Clear out any previous errors from both sources.
+    setError(null);
+    setGeolocationError('');
+
+    // First, check if the geolocation API is even available in the browser.
+    if (!navigator.geolocation) {
+      setGeolocationError('Geolocation is not supported by your browser.');
+      return; // Stop the function here if not supported.
+    }
+
+    setLoading(true); // Show the user we're working on it.
+
+    // 3. Call the core Geolocation API method.
+    navigator.geolocation.getCurrentPosition(
+      // 4. The SUCCESS callback function.
+     async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          // 2. Make the API call to our new backend endpoint.
+          //    We use the `params` option in the axios config object. Axios will
+          //    automatically and safely construct the URL query string for us,
+          //    resulting in a call to: /api/weather/coords?lat=...&lon=...
+          const res = await axios.get('/api/weather/coords', {
+            params: { lat: latitude, lon: longitude, unit }, 
+          });
+
+          // 3. Update the state with the weather data received from the backend.
+          //    This is the same state update as in your `fetchWeather` function,
+          //    which will cause the entire dashboard to re-render with the new data.
+          setWeatherData(res.data);
+          setError(null); // Clear any previous search errors.
+
+        } catch (err) {
+          // 4. Handle any errors that might occur during the API call.
+          console.error('Failed to fetch weather by coordinates:', err);
+          setError('Could not fetch weather data for your location. Please try again.');
+        } finally {
+          // 5. CRITICAL: No matter if the call succeeded or failed, we must stop loading.
+          setLoading(false);
+        }
+      },
+      // 5. The ERROR callback function.
+      (err) => {
+        let message = '';
+        // A switch statement is a clean way to handle the different error codes.
+        switch (err.code) {
+          case err.PERMISSION_DENIED:
+            message = 'You denied the request for Geolocation. Please enable it in your browser settings to use this feature.';
+            break;
+          case err.POSITION_UNAVAILABLE:
+            message = 'Location information is currently unavailable.';
+            break;
+          case err.TIMEOUT:
+            message = 'The request to get your location timed out.';
+            break;
+          default:
+            message = 'An unknown error occurred while getting your location.';
+            break;
+        }
+        setGeolocationError(message); // Update our dedicated error state.
+        setLoading(false); // Always stop loading, even on error.
+      }
+    );
+  };
+
   return (
     
     <>
@@ -112,12 +178,18 @@ function App() {
               <>
       <header>
         <h1>Weather Dashboard</h1>
+        <ToggleSwitch unit={unit} onToggle={handleUnitToggle} />
         {/*
           We render the SearchForm component here. React will replace this tag
           with the entire JSX returned by the SearchForm.js file.
         */}
+        <div className="search-container">
         <SearchForm onSearch={fetchWeather}/>
-        {isAuthenticated && <FavoritesList />}
+        
+        <button type="button" className="btn-geolocation" onClick={handleGeolocationClick}>
+                      Use My Location
+                    </button>
+                    </div>
         {isAuthenticated && <FavoritesList onFavoriteClick={fetchWeather} />}
         {searchHistory.length > 0 && (
           <div className="search-history">
@@ -150,19 +222,21 @@ function App() {
 
         {error && !loading && <p className="error-message">{error}</p>}
 
+        {geolocationError && <p className="error-message">{geolocationError}</p>}
+
          {weatherData && !loading && !error && (
           <>
             {/* 
               Pass the `current` property of our weatherData state
               to the `CurrentWeather` component.
             */}
-            <CurrentWeather weatherData={weatherData.current} onSetDefault={handleSetDefault}/>
+            <CurrentWeather weatherData={weatherData.current} onSetDefault={handleSetDefault} unit={unit}/>
             
             {/* 
               Pass the `forecast` property (the array of 5 days)
               to the `Forecast` component.
             */}
-            <Forecast forecastData={weatherData.forecast} />
+            <Forecast forecastData={weatherData.forecast} unit={unit}/>
              {(() => {
               
               const chartData = weatherData.forecast.map(day => ({
