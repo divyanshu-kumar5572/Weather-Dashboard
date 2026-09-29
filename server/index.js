@@ -6,7 +6,7 @@ import axios from 'axios';
 import connectDB from './db.js';
 import authRoutes from './routes/auth.js';
 import favoritesRoutes from './routes/favorites.js';
-
+import userRoutes from './routes/user.js';
 dotenv.config();
 connectDB();
 const app = express();
@@ -76,6 +76,7 @@ app.get('/api/weather', async (req, res) => {
 });
 app.use('/api/auth', authRoutes);
 app.use('/api/favorites', favoritesRoutes);
+app.use('/api/user', userRoutes);
 const processWeatherData = (currentData, forecastData) => {
   const currentWeather = {
     city: currentData.name,

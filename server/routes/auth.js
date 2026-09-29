@@ -67,6 +67,14 @@ router.post('/login', async (req, res) => {
       { expiresIn: '7d' },    
       (err, token) => {       
         if (err) throw err;
+        const userToReturn = {
+      id: user.id,
+      email: user.email,
+      favoriteCities: user.favoriteCities,
+      unitPreference: user.unitPreference, // Include the new preference!
+    };
+
+    res.json({ token, user: userToReturn });
         res.status(200).json({ token });
       }
     );
