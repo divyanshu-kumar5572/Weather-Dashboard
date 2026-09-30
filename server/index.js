@@ -11,69 +11,6 @@ dotenv.config();
 connectDB();
 const app = express();
 app.use(express.json());
-app.get('/api/weather', async (req, res) => {
-  try {
-    const { city } = req.query;
-    if (!city) {
-      return res.status(400).json({ message: 'City is required' });
-    }
-    const apiKey = process.env.WEATHER_API_KEY;
-    const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=${apiKey}`;
-    const response = await axios.get(forecastUrl);
-    const forecastData = response.data;
-    const currentWeatherData = {
-      city: forecastData.city.name,
-      country: forecastData.city.country,
-      temperature: forecastData.list[0].main.temp,
-      feelsLike: forecastData.list[0].main.feels_like,
-      humidity: forecastData.list[0].main.humidity,
-      windSpeed: forecastData.list[0].wind.speed,
-      condition: forecastData.list[0].weather[0].main,
-      description: forecastData.list[0].weather[0].description,
-      icon: forecastData.list[0].weather[0].icon,
-    };
-
-    const dailyForecasts = {};
-    forecastData.list.forEach(item => {
-      const date = new Date(item.dt * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-      
-      if (!dailyForecasts[date]) {
-        dailyForecasts[date] = {
-          day: new Date(item.dt * 1000).toLocaleDateString('en-US', { weekday: 'short' }),
-          temps: [],
-          icons: new Set(), 
-        };
-      }
-      
-      dailyForecasts[date].temps.push(item.main.temp);
-      dailyForecasts[date].icons.add(item.weather[0].icon);
-    });
-
-    const processedForecast = Object.values(dailyForecasts).map(dayData => ({
-      day: dayData.day,
-      tempHigh: Math.max(...dayData.temps),
-      tempLow: Math.min(...dayData.temps),
-      icon: dayData.icons.values().next().value, 
-    })).slice(0, 5); 
-
-    const processedData = {
-      current: currentWeatherData,
-      forecast: processedForecast,
-    };
-
-    res.json(processedData);
-
-  } catch (error) {
-    
-    console.error('Error fetching weather data:', error.response ? error.response.data : error.message);
-    
-    if (error.response && error.response.status === 404) {
-      return res.status(404).json({ message: 'City not found. Please check the spelling.' });
-    }
-   
-    res.status(500).json({ message: 'Failed to fetch weather data' });
-  }
-});
 app.use('/api/auth', authRoutes);
 app.use('/api/favorites', favoritesRoutes);
 app.use('/api/user', userRoutes);
@@ -122,14 +59,14 @@ const processWeatherData = (currentData, forecastData) => {
 
 // 2. THE EXISTING CITY-BASED WEATHER ROUTE (NOW REFACTORED)
 app.get('/api/weather', async (req, res) => {
-  const { city, unit = 'metric' } = req.query;
+  const { city } = req.query;
   if (!city) {
     return res.status(400).json({ message: 'City parameter is required' });
   }
 
   const apiKey = process.env.WEATHER_API_KEY;
-  const currentWeatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=${unit}`;
-  const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=${unit}`;
+  const currentWeatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+  const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
   
   try {
     // Make parallel API requests for efficiency
@@ -151,7 +88,7 @@ app.get('/api/weather', async (req, res) => {
 // 3. THE NEW COORDINATE-BASED WEATHER ROUTE
 app.get('/api/weather/coords', async (req, res) => {
   // Extract latitude and longitude from the query parameters
-  const { lat, lon, unit = 'metric' } = req.query;
+  const { lat, lon} = req.query;
 
   // Validate that both parameters were provided
   if (!lat || !lon) {
@@ -160,8 +97,8 @@ app.get('/api/weather/coords', async (req, res) => {
 
   const apiKey = process.env.WEATHER_API_KEY;
   // Construct the API URLs using coordinates instead of a city name
-  const currentWeatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${unit}`;
-  const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${unit}`;
+  const currentWeatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+  const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
 
   try {
     // The rest of the logic is identical to the city-based search!

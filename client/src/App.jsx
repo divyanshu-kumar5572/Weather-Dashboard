@@ -17,7 +17,7 @@ import './App.css';
 import ToggleSwitch from './components/ToggleSwitch';
 // The App component is the top-level component that acts as the main container for our application.
 function App() {
-  const { isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated, user, token} = useContext(AuthContext);
   const [weatherData, setWeatherData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -39,11 +39,40 @@ function App() {
 const [unit, setUnit] = useState(() => {
     return localStorage.getItem('unit') || 'metric';
   });
-
+useEffect(() => {
+    if (isAuthenticated && user?.unitPreference) {
+      // If the user is logged in and has a preference saved in their profile,
+      // we update our local UI state to match it. This is the source of truth.
+      setUnit(user.unitPreference);
+    } else {
+      // If the user logs out, we fall back to what's in localStorage or the default.
+      setUnit(localStorage.getItem('unit') || 'metric');
+    }
+  }, [user, isAuthenticated]);
   // 2. Use a `useEffect` hook to save the unit to localStorage whenever it changes.
   useEffect(() => {
+    // Always save to localStorage for instant persistence for all users.
     localStorage.setItem('unit', unit);
-  }, [unit]);
+
+    // If the user is authenticated, we also save their preference to the database.
+    if (isAuthenticated && token) {
+      // We define an async function to perform this "fire-and-forget" update.
+      const updateUserPreferenceInDb = async () => {
+        try {
+          const config = {
+            headers: { Authorization: `Bearer ${token}` },
+          };
+          // Call the new PUT endpoint we created.
+          await axios.put('/api/user/preferences', { unit }, config);
+        } catch (error) {
+          // We log the error but don't show a blocking message, as this is a background task.
+          console.error('Failed to sync unit preference to DB:', error);
+        }
+      };
+
+      updateUserPreferenceInDb();
+    }
+  }, [unit, isAuthenticated, token]);
   
   // 3. Create the handler function for the toggle switch.
   const handleUnitToggle = () => {
@@ -58,7 +87,7 @@ const [unit, setUnit] = useState(() => {
     
     try {
       
-      const response = await axios.get('/api/weather', { params: { city, unit } });
+      const response = await axios.get('/api/weather', { params: { city } });
 
       
       setWeatherData(response.data);
@@ -117,7 +146,7 @@ const [unit, setUnit] = useState(() => {
           //    automatically and safely construct the URL query string for us,
           //    resulting in a call to: /api/weather/coords?lat=...&lon=...
           const res = await axios.get('/api/weather/coords', {
-            params: { lat: latitude, lon: longitude, unit }, 
+            params: { lat: latitude, lon: longitude }, 
           });
 
           // 3. Update the state with the weather data received from the backend.

@@ -42,7 +42,7 @@ function LoginPage() {
       if (res.data.token) {
         // The backend sends back a response object with a `token` property.
         // We pass this token to our `login` function from the AuthContext.
-        login(res.data.token);
+        login(res.data.token, res.data.user);
         
         // After logging in, we redirect the user to the main dashboard page.
         navigate('/');

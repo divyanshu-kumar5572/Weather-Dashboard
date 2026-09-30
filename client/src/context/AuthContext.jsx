@@ -4,9 +4,14 @@ export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   
-  const [token, setToken] = useState(null);
-  const [user, setUser] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [token, setToken] = useState(localStorage.getItem('token'));
+  // --- MODIFIED LINE ---
+  // Initialize user state from localStorage if it exists.
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+  const [isAuthenticated, setIsAuthenticated] = useState(!!token);
   
   const [isLoading, setIsLoading] = useState(true);
 
@@ -22,9 +27,13 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(false);
   }, []); 
 
-  const login = (newToken) => {
+   const login = (newToken, userData) => {
     localStorage.setItem('token', newToken);
+    // We stringify the user object to store it in localStorage.
+    // This helps re-populate the UI instantly on a page refresh.
+    localStorage.setItem('user', JSON.stringify(userData)); 
     setToken(newToken);
+    setUser(userData);
     setIsAuthenticated(true);
   };
 
