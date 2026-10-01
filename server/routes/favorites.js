@@ -1,35 +1,15 @@
-// server/routes/favorites.js
+import express from "express";
+import { protect } from "../middleware/authMiddleware.js";
+import User from "../models/User.js";
 
-import express from 'express';
-// 1. Import our custom `protect` middleware. This is our security guard.
-import { protect } from '../middleware/authMiddleware.js';
-
-// We will also need the User model later to update the database.
-import User from '../models/User.js';
-
-// 2. Create a new router instance from Express.
 const router = express.Router();
-
-// 3. Define the routes. Notice how `protect` is added as an argument.
-//    This means that for any request to these endpoints, the `protect`
-//    middleware will run FIRST. If the user is not authenticated, the request
-//    will be rejected by the middleware and never even reach the final
-//    route handler function.
 
 /**
  * @route   GET /api/favorites
  * @desc    Get the logged-in user's favorite cities
  * @access  Private
  */
-router.get('/', protect, (req, res) => {
-  // By the time this code is executed, the `protect` middleware has already:
-  // 1. Confirmed a valid JWT was provided.
-  // 2. Found the user in the database via the ID in the token.
-  // 3. Attached the user document to `req.user` (excluding the password).
-
-  // Therefore, our only job here is to access the `favoriteCities` array
-  // from the `req.user` object and send it back to the client.
-  // We send a 200 OK status and a JSON object containing the array.
+router.get("/", protect, (req, res) => {
   res.status(200).json({
     favoriteCities: req.user.favoriteCities,
   });
@@ -40,49 +20,32 @@ router.get('/', protect, (req, res) => {
  * @desc    Add a city to the logged-in user's favorites
  * @access  Private
  */
-router.post('/', protect, async (req, res) => {
-  // 1. Extract the city name from the request body.
+router.post("/", protect, async (req, res) => {
   const { city } = req.body;
-
-  // 2. Basic validation to ensure a city was provided.
   if (!city) {
-    return res.status(400).json({ message: 'City name is required' });
+    return res.status(400).json({ message: "City name is required" });
   }
-
   try {
-    // 3. Find the logged-in user by their ID (from the `protect` middleware)
-    //    and update their document in a single, atomic operation.
     const updatedUser = await User.findByIdAndUpdate(
       req.user.id, // The ID of the document to update.
-      { 
-        // The `$addToSet` operator adds the `city` to the `favoriteCities` array.
-        // It will only add the city if it's not already present in the array.
-        $addToSet: { favoriteCities: city } 
+      {
+        $addToSet: { favoriteCities: city },
       },
-      { 
-        // The `new: true` option is crucial. It tells Mongoose to return the
-        // document *after* the update has been applied, so we get the fresh data.
-        // Without it, we would get the old document from before the city was added.
-        new: true 
-      }
-    ).select('-password'); // We still select '-password' for security, even on updates.
-
-    // 4. If the user is somehow not found (highly unlikely after `protect` middleware), handle it.
+      {
+        new: true,
+      },
+    ).select("-password");
     if (!updatedUser) {
-        return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    // 5. Send a success response back to the client, including the newly updated
-    //    list of favorite cities. This is very useful for the frontend to update its state.
     res.status(200).json({
-        message: `'${city}' added to favorites successfully.`,
-        favoriteCities: updatedUser.favoriteCities,
+      message: `'${city}' added to favorites successfully.`,
+      favoriteCities: updatedUser.favoriteCities,
     });
-
   } catch (error) {
-    // 6. Generic error handling for any other database or server issues.
-    console.error('Error adding favorite city:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error adding favorite city:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 /**
@@ -90,45 +53,33 @@ router.post('/', protect, async (req, res) => {
  * @desc    Remove a city from the logged-in user's favorites
  * @access  Private
  */
-router.delete('/', protect, async (req, res) => {
-  // 1. Extract the city name to be removed from the request body.
-  //    Keeping this consistent with the POST route makes our API predictable.
+router.delete("/", protect, async (req, res) => {
   const { city } = req.body;
-
-  // 2. Validate that a city name was provided.
   if (!city) {
-    return res.status(400).json({ message: 'City name is required' });
+    return res.status(400).json({ message: "City name is required" });
   }
 
   try {
-    // 3. Find the logged-in user and update their document in one atomic operation.
     const updatedUser = await User.findByIdAndUpdate(
-      req.user.id, // The ID of the user to update, provided by our `protect` middleware.
+      req.user.id,
       {
-        // The `$pull` operator removes the specified `city` from the `favoriteCities` array.
-        $pull: { favoriteCities: city }
+        $pull: { favoriteCities: city },
       },
-      { new: true } // Return the updated document.
-    ).select('-password'); // Exclude the password for security.
+      { new: true },
+    ).select("-password");
 
-    // 4. Handle the unlikely case that the user is not found.
     if (!updatedUser) {
-        return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    // 5. Respond with a success message and the user's new list of favorites.
-    //    Sending the updated list back is extremely useful for the frontend.
     res.status(200).json({
-        message: `'${city}' removed from favorites successfully.`,
-        favoriteCities: updatedUser.favoriteCities,
+      message: `'${city}' removed from favorites successfully.`,
+      favoriteCities: updatedUser.favoriteCities,
     });
-
   } catch (error) {
-    // 6. Handle any potential server or database errors.
-    console.error('Error removing favorite city:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error removing favorite city:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-// 4. Export the router so it can be mounted in our main server file.
 export default router;

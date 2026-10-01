@@ -372,3 +372,100 @@ input:checked + .slider:before {
 .slider.round:before {
   border-radius: 50%;
 }
+
+.weather-icon-large {
+  color: #3b82f6;
+  font-size: 8rem; /* Use font-size to control the icon size */
+  line-height: 1; /* Helps with vertical alignment */
+  margin-bottom: 1rem;
+}
+
+.weather-icon-small {
+  color: #4b5563;
+  font-size: 3.5rem; /* A smaller size for the forecast cards */
+  margin-bottom: 0.5rem;
+}
+/* client/src/App.css */
+
+/* ==========================================================================
+   Responsive Media Queries
+   ========================================================================== */
+
+/* Our base CSS is already mobile-first, but let's ensure some key
+   components stack nicely by default. */
+
+.forecast-cards {
+  /* On small screens (our base style), stack the cards vertically. */
+  flex-direction: column;
+  align-items: center;
+}
+
+.search-container {
+  /* Allow the search form and geolocation button to wrap onto a new line if needed. */
+  flex-wrap: wrap;
+}
+
+/* --- Tablet Breakpoint --- */
+/* This media query applies styles when the viewport is 768px or wider. */
+@media (min-width: 768px) {
+  .App header h1 {
+    font-size: 2.5rem; /* Make the main title a bit larger on tablets */
+  }
+
+  .forecast-cards {
+    /* On tablets and larger, display the forecast cards in a row again. */
+    flex-direction: row;
+    justify-content: space-around; /* Spread them out a bit */
+  }
+
+  .forecast-card {
+    /* Give each card a bit more space */
+    padding: 1.5rem;
+  }
+
+  .weather-details {
+    /* Allow the weather details to be in a row for a more classic look */
+    flex-direction: row;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  .weather-icon-large {
+    margin-bottom: 0; /* Remove bottom margin since it's now side-by-side */
+  }
+}
+
+/* --- Desktop Breakpoint --- */
+/* This media query applies styles when the viewport is 1024px or wider. */
+@media (min-width: 1024px) {
+  .App {
+    /* Increase the max-width of the main container on large screens */
+    max-width: 1100px;
+    margin: 2rem auto;
+  }
+
+  .App header h1 {
+    font-size: 3rem; /* Even larger title for desktops */
+  }
+
+  .weather-icon-large {
+    font-size: 10rem; /* Make the main weather icon bigger */
+  }
+
+  .temperature {
+    font-size: 5rem;
+  }
+
+  .condition {
+    font-size: 2rem;
+  }
+}
+
+/* --- Auth Form Polish for Small Screens --- */
+/* This targets screens smaller than 420px to refine the auth form padding. */
+@media (max-width: 420px) {
+  .auth-form-container {
+    /* Reduce padding on very narrow screens to prevent the form from feeling cramped. */
+    padding: 1.5rem;
+  }
+}
